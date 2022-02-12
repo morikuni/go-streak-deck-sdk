@@ -14,8 +14,7 @@ type Conn struct {
 }
 
 func DialAuto() (*Conn, error) {
-	// TODO: fix name
-	fs := flag.NewFlagSet("plugin", flag.ContinueOnError)
+	fs := flag.NewFlagSet("go-stream-deck-sdk", flag.ContinueOnError)
 
 	port := fs.String("port", "", "port to bind websocket server")
 	uuid := fs.String("pluginUUID", "", "the ID of the plugin")
@@ -57,7 +56,13 @@ func Dial(port, event, uuid, info string) (*Conn, error) {
 		return nil, fmt.Errorf("error during registratino procedure: %w", err)
 	}
 
-	return &Conn{conn}, nil
+	// Put dummy log because the first log seems to be discarded (I don't know why).
+	c := &Conn{conn}
+	c.Send(&LogMessage{
+		Message: "dummy log",
+	})
+
+	return c, nil
 }
 
 func (c *Conn) Receive() (Event, error) {
