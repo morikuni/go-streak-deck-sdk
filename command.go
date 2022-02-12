@@ -41,14 +41,14 @@ func newCommandPayload(cmd Command) (*commandPayload, error) {
 
 	p.Payload = payload
 
-	if t, ok := cmd.(interface{ GetAction() string }); ok {
-		p.Action = t.GetAction()
+	if t, ok := cmd.(interface{ getAction() string }); ok {
+		p.Action = t.getAction()
 	}
-	if t, ok := cmd.(interface{ GetContext() string }); ok {
-		p.Action = t.GetContext()
+	if t, ok := cmd.(interface{ getContext() string }); ok {
+		p.Action = t.getContext()
 	}
-	if t, ok := cmd.(interface{ GetDevice() string }); ok {
-		p.Action = t.GetDevice()
+	if t, ok := cmd.(interface{ getDevice() string }); ok {
+		p.Action = t.getDevice()
 	}
 
 	return p, nil
