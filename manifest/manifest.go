@@ -64,11 +64,11 @@ type DeviceType int
 
 const (
 	DeviceTypeStreamDeck       DeviceType = 0
-	DeviceTypeStreamDeckMini   DeviceType = 0
-	DeviceTypeStreamDeckXL     DeviceType = 0
-	DeviceTypeStreamDeckMobile DeviceType = 0
-	DeviceTypeCorsairGKeys     DeviceType = 0
-	DeviceTypeStreamDeckPanel  DeviceType = 0
+	DeviceTypeStreamDeckMini   DeviceType = 1
+	DeviceTypeStreamDeckXL     DeviceType = 2
+	DeviceTypeStreamDeckMobile DeviceType = 3
+	DeviceTypeCorsairGKeys     DeviceType = 4
+	DeviceTypeStreamDeckPanel  DeviceType = 5
 )
 
 type OS struct {
