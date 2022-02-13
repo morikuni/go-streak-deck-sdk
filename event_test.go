@@ -133,6 +133,10 @@ func TestEventPayload_Typed(t *testing.T) {
 				Application: "com.apple.mail",
 			},
 		},
+		"systemDidWakeUp": {
+			systemDidWakeUpJSON,
+			&SystemDidWakeUp{},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			var ep eventPayload
@@ -268,6 +272,10 @@ var applicationDidTerminateJSON = `{
     "payload" : {
         "application": "com.apple.mail"
     }
+}`
+
+var systemDidWakeUpJSON = `{
+    "event": "systemDidWakeUp"
 }`
 
 func noError(tb testing.TB, err error) {
