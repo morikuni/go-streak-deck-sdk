@@ -115,6 +115,12 @@ func TestEventPayload_Typed(t *testing.T) {
 				},
 			},
 		},
+		"deviceDidDisconnect": {
+			deviceDidDisconnectJSON,
+			&DeviceDidDisconnect{
+				Device: "device",
+			},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			var ep eventPayload
@@ -231,6 +237,11 @@ var deviceDidConnectJSON = `{
             "columns": 5
         }
     }
+}`
+
+var deviceDidDisconnectJSON = `{
+    "event": "deviceDidDisconnect",
+    "device": "device"
 }`
 
 func noError(tb testing.TB, err error) {

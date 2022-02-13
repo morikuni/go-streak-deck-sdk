@@ -63,6 +63,8 @@ func (ep eventPayload) Typed() (Event, error) {
 			return &TitleParametersDidChange{}
 		case "deviceDidConnect":
 			return &DeviceDidConnect{}
+		case "deviceDidDisconnect":
+			return &DeviceDidDisconnect{}
 		default:
 			return &DebugEvent{}
 		}
@@ -161,7 +163,11 @@ type DeviceDidConnect struct {
 	DeviceInfo *DeviceInfo `json:"deviceInfo"`
 }
 
-func (e *DeviceDidConnect) setDevice(s string) { e.Device = s }
+type DeviceDidDisconnect struct {
+	eventMarkImpl
+
+	Device string `json:"device"`
+}
 
 type DeviceInfo struct {
 	Name string     `json:"name"`
