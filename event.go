@@ -18,6 +18,10 @@ var _ = []Event{
 	(*WillAppear)(nil),
 	(*WillDisappear)(nil),
 	(*TitleParametersDidChange)(nil),
+	(*DeviceDidConnect)(nil),
+	(*DeviceDidDisconnect)(nil),
+	(*ApplicationDidLaunch)(nil),
+	(*ApplicationDidTerminate)(nil),
 	(*DebugEvent)(nil),
 }
 
@@ -67,6 +71,8 @@ func (ep eventPayload) Typed() (Event, error) {
 			return &DeviceDidDisconnect{}
 		case "applicationDidLaunch":
 			return &ApplicationDidLaunch{}
+		case "applicationDidTerminate":
+			return &ApplicationDidTerminate{}
 		default:
 			return &DebugEvent{}
 		}
@@ -172,6 +178,12 @@ type DeviceDidDisconnect struct {
 }
 
 type ApplicationDidLaunch struct {
+	eventMarkImpl
+
+	Application string `json:"application"`
+}
+
+type ApplicationDidTerminate struct {
 	eventMarkImpl
 
 	Application string `json:"application"`
