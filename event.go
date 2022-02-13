@@ -52,6 +52,8 @@ func (ep eventPayload) Typed() (Event, error) {
 			return &KeyDown{}
 		case "keyUp":
 			return &KeyUp{}
+		case "willAppear":
+			return &WillAppear{}
 		case "deviceDidConnect":
 			return &DeviceDidConnect{}
 		default:
@@ -103,6 +105,19 @@ type KeyUp struct {
 	State            int             `json:"state"`
 	UserDesiredState int             `json:"userDesiredState"`
 	IsInMultiAction  bool            `json:"isInMultiAction"`
+}
+
+type WillAppear struct {
+	eventMarkImpl
+
+	Action  string `json:"action"`
+	Context string `json:"context"`
+	Device  string `json:"device"`
+
+	Settings        json.RawMessage `json:"settings"`
+	Coordinates     Coordinates     `json:"coordinates"`
+	State           int             `json:"state"`
+	IsInMultiAction bool            `json:"isInMultiAction"`
 }
 
 type DeviceDidConnect struct {
