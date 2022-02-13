@@ -65,6 +65,8 @@ func (ep eventPayload) Typed() (Event, error) {
 			return &DeviceDidConnect{}
 		case "deviceDidDisconnect":
 			return &DeviceDidDisconnect{}
+		case "applicationDidLaunch":
+			return &ApplicationDidLaunch{}
 		default:
 			return &DebugEvent{}
 		}
@@ -167,6 +169,12 @@ type DeviceDidDisconnect struct {
 	eventMarkImpl
 
 	Device string `json:"device"`
+}
+
+type ApplicationDidLaunch struct {
+	eventMarkImpl
+
+	Application string `json:"application"`
 }
 
 type DeviceInfo struct {

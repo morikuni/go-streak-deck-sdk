@@ -121,6 +121,12 @@ func TestEventPayload_Typed(t *testing.T) {
 				Device: "device",
 			},
 		},
+		"applicationDidLaunch": {
+			applicationDidLaunchJSON,
+			&ApplicationDidLaunch{
+				Application: "com.apple.mail",
+			},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			var ep eventPayload
@@ -242,6 +248,13 @@ var deviceDidConnectJSON = `{
 var deviceDidDisconnectJSON = `{
     "event": "deviceDidDisconnect",
     "device": "device"
+}`
+
+var applicationDidLaunchJSON = `{
+    "event": "applicationDidLaunch",
+    "payload" : {
+        "application": "com.apple.mail"
+    }
 }`
 
 func noError(tb testing.TB, err error) {
