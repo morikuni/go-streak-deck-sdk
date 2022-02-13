@@ -77,6 +77,30 @@ func TestEventPayload_Typed(t *testing.T) {
 				IsInMultiAction: true,
 			},
 		},
+		"titleParameterDidChange": {
+			titleParameterDidChangeJSON,
+			&TitleParametersDidChange{
+				Action:   "com.elgato.example.action1",
+				Context:  "context",
+				Device:   "device",
+				Settings: json.RawMessage(`{}`),
+				Coordinates: Coordinates{
+					Row:    1,
+					Column: 3,
+				},
+				State: 1,
+				Title: "title",
+				TitleParameters: TitleParameters{
+					FontFamily:     "fontFamily",
+					FontSize:       12,
+					FontStyle:      "fontStyle",
+					FontUnderline:  true,
+					ShowTitle:      true,
+					TitleAlignment: AlignmentBottom,
+					TitleColor:     "#ffffff",
+				},
+			},
+		},
 		"deviceDidConnect": {
 			deviceDidConnectJSON,
 			&DeviceDidConnect{
@@ -169,6 +193,31 @@ var willDisappearJSON = `{
         "state": 1,
         "isInMultiAction": true
     }
+}`
+
+var titleParameterDidChangeJSON = `{
+  "action": "com.elgato.example.action1", 
+  "event": "titleParametersDidChange", 
+  "context": "context", 
+  "device": "device", 
+  "payload": {
+    "coordinates": {
+      "column": 3, 
+      "row": 1
+    }, 
+    "settings": {}, 
+    "state": 1, 
+    "title": "title", 
+    "titleParameters": {
+      "fontFamily": "fontFamily", 
+      "fontSize": 12, 
+      "fontStyle": "fontStyle", 
+      "fontUnderline": true, 
+      "showTitle": true, 
+      "titleAlignment": "bottom", 
+      "titleColor": "#ffffff"
+    }
+  }
 }`
 
 var deviceDidConnectJSON = `{

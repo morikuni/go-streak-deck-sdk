@@ -14,7 +14,10 @@ type Event interface {
 
 var _ = []Event{
 	(*KeyDown)(nil),
-	(*DeviceDidConnect)(nil),
+	(*KeyUp)(nil),
+	(*WillAppear)(nil),
+	(*WillDisappear)(nil),
+	(*TitleParametersDidChange)(nil),
 	(*DebugEvent)(nil),
 }
 
@@ -56,6 +59,8 @@ func (ep eventPayload) Typed() (Event, error) {
 			return &WillAppear{}
 		case "willDisappear":
 			return &WillDisappear{}
+		case "titleParametersDidChange":
+			return &TitleParametersDidChange{}
 		case "deviceDidConnect":
 			return &DeviceDidConnect{}
 		default:
@@ -135,6 +140,20 @@ type WillDisappear struct {
 	IsInMultiAction bool            `json:"isInMultiAction"`
 }
 
+type TitleParametersDidChange struct {
+	eventMarkImpl
+
+	Action  string `json:"action"`
+	Context string `json:"context"`
+	Device  string `json:"device"`
+
+	Settings        json.RawMessage `json:"settings"`
+	Coordinates     Coordinates     `json:"coordinates"`
+	State           int             `json:"state"`
+	Title           string          `json:"title"`
+	TitleParameters TitleParameters `json:"titleParameters"`
+}
+
 type DeviceDidConnect struct {
 	eventMarkImpl
 
@@ -170,6 +189,24 @@ type Coordinates struct {
 	Row    int `json:"row"`
 	Column int `json:"column"`
 }
+
+type TitleParameters struct {
+	FontFamily     string    `json:"fontFamily"`
+	FontSize       int       `json:"fontSize"`
+	FontStyle      string    `json:"fontStyle"`
+	FontUnderline  bool      `json:"fontUnderline"`
+	ShowTitle      bool      `json:"showTitle"`
+	TitleAlignment Alignment `json:"titleAlignment"`
+	TitleColor     string    `json:"titleColor"`
+}
+
+type Alignment string
+
+const (
+	AlignmentTop    Alignment = "top"
+	AlignmentBottom Alignment = "bottom"
+	AlignmentMiddle Alignment = "middle"
+)
 
 // TODO: remove me
 type DebugEvent struct {
