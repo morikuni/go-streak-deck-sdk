@@ -54,6 +54,8 @@ func (ep eventPayload) Typed() (Event, error) {
 			return &KeyUp{}
 		case "willAppear":
 			return &WillAppear{}
+		case "willDisappear":
+			return &WillDisappear{}
 		case "deviceDidConnect":
 			return &DeviceDidConnect{}
 		default:
@@ -108,6 +110,19 @@ type KeyUp struct {
 }
 
 type WillAppear struct {
+	eventMarkImpl
+
+	Action  string `json:"action"`
+	Context string `json:"context"`
+	Device  string `json:"device"`
+
+	Settings        json.RawMessage `json:"settings"`
+	Coordinates     Coordinates     `json:"coordinates"`
+	State           int             `json:"state"`
+	IsInMultiAction bool            `json:"isInMultiAction"`
+}
+
+type WillDisappear struct {
 	eventMarkImpl
 
 	Action  string `json:"action"`

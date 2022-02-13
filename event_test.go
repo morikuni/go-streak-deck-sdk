@@ -62,6 +62,21 @@ func TestEventPayload_Typed(t *testing.T) {
 				IsInMultiAction: true,
 			},
 		},
+		"willDisappear": {
+			willDisappearJSON,
+			&WillDisappear{
+				Action:   "com.elgato.example.action1",
+				Context:  "context",
+				Device:   "device",
+				Settings: json.RawMessage(`{}`),
+				Coordinates: Coordinates{
+					Row:    1,
+					Column: 3,
+				},
+				State:           1,
+				IsInMultiAction: true,
+			},
+		},
 		"deviceDidConnect": {
 			deviceDidConnectJSON,
 			&DeviceDidConnect{
@@ -125,9 +140,24 @@ var keyUpJSON = `{
 }`
 
 var willAppearJSON = `{
-
     "action": "com.elgato.example.action1",
     "event": "willAppear",
+    "context": "context",
+    "device": "device",
+    "payload": {
+        "settings": {},
+        "coordinates": {
+            "column": 3, 
+            "row": 1
+        },
+        "state": 1,
+        "isInMultiAction": true
+    }
+}`
+
+var willDisappearJSON = `{
+    "action": "com.elgato.example.action1",
+    "event": "willDisappear",
     "context": "context",
     "device": "device",
     "payload": {
