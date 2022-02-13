@@ -31,6 +31,22 @@ func TestEventPayload_Typed(t *testing.T) {
 				IsInMultiAction:  true,
 			},
 		},
+		"keyUp": {
+			keyUpJSON,
+			&KeyUp{
+				Action:   "com.elgato.example.action1",
+				Context:  "context",
+				Device:   "device",
+				Settings: json.RawMessage(`{}`),
+				Coordinates: Coordinates{
+					Row:    1,
+					Column: 3,
+				},
+				State:            1,
+				UserDesiredState: 1,
+				IsInMultiAction:  true,
+			},
+		},
 		"deviceDidConnect": {
 			deviceDidConnectJSON,
 			&DeviceDidConnect{
@@ -62,6 +78,23 @@ func TestEventPayload_Typed(t *testing.T) {
 var keyDownJSON = `{
     "action": "com.elgato.example.action1",
     "event": "keyDown",
+    "context": "context",
+    "device": "device",
+    "payload": {
+        "settings": {},
+        "coordinates": {
+            "column": 3, 
+            "row": 1
+        },
+        "state": 1,
+        "userDesiredState": 1,
+        "isInMultiAction": true
+    }
+}`
+
+var keyUpJSON = `{
+    "action": "com.elgato.example.action1",
+    "event": "keyUp",
     "context": "context",
     "device": "device",
     "payload": {
