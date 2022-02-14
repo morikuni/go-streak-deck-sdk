@@ -13,6 +13,8 @@ type Event interface {
 }
 
 var _ = []Event{
+	(*DidReceiveSettings)(nil),
+	(*DidReceiveGlobalSettings)(nil),
 	(*KeyDown)(nil),
 	(*KeyUp)(nil),
 	(*WillAppear)(nil),
@@ -23,7 +25,9 @@ var _ = []Event{
 	(*ApplicationDidLaunch)(nil),
 	(*ApplicationDidTerminate)(nil),
 	(*SystemDidWakeUp)(nil),
-	(*DebugEvent)(nil),
+	(*PropertyInspectorDidAppear)(nil),
+	(*PropertyInspectorDidDisappear)(nil),
+	(*SendToPlugin)(nil),
 }
 
 type eventMarkImpl struct{}
@@ -56,6 +60,10 @@ func (ep *eventPayload) UnmarshalJSON(bs []byte) error {
 func (ep eventPayload) Typed() (Event, error) {
 	var e = func() Event {
 		switch ep.Event {
+		case "didReceiveSettings":
+			return &DidReceiveSettings{}
+		case "didReceiveGlobalSettings":
+			return &DidReceiveGlobalSettings{}
 		case "keyDown":
 			return &KeyDown{}
 		case "keyUp":
@@ -76,12 +84,25 @@ func (ep eventPayload) Typed() (Event, error) {
 			return &ApplicationDidTerminate{}
 		case "systemDidWakeUp":
 			return &SystemDidWakeUp{}
+		case "propertyInspectorDidAppear":
+			return &PropertyInspectorDidAppear{}
+		case "propertyInspectorDidDisappear":
+			return &PropertyInspectorDidDisappear{}
+		case "sendToPlugin":
+			return &SendToPlugin{}
 		default:
-			return &DebugEvent{}
+			return nil
 		}
 	}()
 	if e == nil {
 		return nil, fmt.Errorf("unknown event: %s", ep.Event)
+	}
+
+	if len(ep.Payload) > 0 {
+		err := json.Unmarshal(ep.Payload, e)
+		if err != nil {
+			return nil, fmt.Errorf("failed to bind event payload to %T: %w", e, err)
+		}
 	}
 
 	err := json.Unmarshal(ep.Raw, e)
@@ -89,14 +110,26 @@ func (ep eventPayload) Typed() (Event, error) {
 		return nil, fmt.Errorf("failed to bind event to %T: %w", e, err)
 	}
 
-	if len(ep.Payload) > 0 {
-		err = json.Unmarshal(ep.Payload, e)
-		if err != nil {
-			return nil, fmt.Errorf("failed to bind event payload to %T: %w", e, err)
-		}
-	}
-
 	return e, nil
+}
+
+type DidReceiveSettings struct {
+	eventMarkImpl
+
+	Action  string `json:"action"`
+	Context string `json:"context"`
+	Device  string `json:"device"`
+
+	Settings        json.RawMessage `json:"settings"`
+	Coordinates     Coordinates     `json:"coordinates"`
+	State           int             `json:"state"`
+	IsInMultiAction bool            `json:"isInMultiAction"`
+}
+
+type DidReceiveGlobalSettings struct {
+	eventMarkImpl
+
+	Payload json.RawMessage `json:"payload"`
 }
 
 type KeyDown struct {
@@ -196,6 +229,31 @@ type SystemDidWakeUp struct {
 	eventMarkImpl
 }
 
+type PropertyInspectorDidAppear struct {
+	eventMarkImpl
+
+	Action  string `json:"action"`
+	Context string `json:"context"`
+	Device  string `json:"device"`
+}
+
+type PropertyInspectorDidDisappear struct {
+	eventMarkImpl
+
+	Action  string `json:"action"`
+	Context string `json:"context"`
+	Device  string `json:"device"`
+}
+
+type SendToPlugin struct {
+	eventMarkImpl
+
+	Action  string `json:"action"`
+	Context string `json:"context"`
+
+	Payload json.RawMessage `json:"payload"`
+}
+
 type DeviceInfo struct {
 	Name string     `json:"name"`
 	Type DeviceType `json:"type"`
@@ -240,26 +298,3 @@ const (
 	AlignmentBottom Alignment = "bottom"
 	AlignmentMiddle Alignment = "middle"
 )
-
-// TODO: remove me
-type DebugEvent struct {
-	eventMarkImpl
-
-	Event string `json:"event"`
-	Raw   string `json:"-"`
-}
-
-func (e *DebugEvent) UnmarshalJSON(bs []byte) error {
-	var eventExtractor struct {
-		Event string `json:"event"`
-	}
-
-	err := json.Unmarshal(bs, &eventExtractor)
-	if err != nil {
-		return err
-	}
-
-	e.Event = eventExtractor.Event
-	e.Raw = string(bs)
-	return nil
-}

@@ -15,6 +15,27 @@ func TestEventPayload_Typed(t *testing.T) {
 
 		want Event
 	}{
+		"didReceiveSettings": {
+			didReceiveSettingsJSON,
+			&DidReceiveSettings{
+				Action:   "com.elgato.example.action1",
+				Context:  "context",
+				Device:   "device",
+				Settings: json.RawMessage(`{}`),
+				Coordinates: Coordinates{
+					Row:    1,
+					Column: 3,
+				},
+				State:           1,
+				IsInMultiAction: true,
+			},
+		},
+		"didReceiveGlobalSettings": {
+			didReceiveGlobalSettingsJSON,
+			&DidReceiveGlobalSettings{
+				Payload: json.RawMessage(`{}`),
+			},
+		},
 		"keyDown": {
 			keyDownJSON,
 			&KeyDown{
@@ -137,6 +158,30 @@ func TestEventPayload_Typed(t *testing.T) {
 			systemDidWakeUpJSON,
 			&SystemDidWakeUp{},
 		},
+		"propertyInspectorDidAppear": {
+			propertyInspectorDidAppearJSON,
+			&PropertyInspectorDidAppear{
+				Action:  "com.elgato.example.action1",
+				Context: "context",
+				Device:  "device",
+			},
+		},
+		"propertyInspectorDidDisappear": {
+			propertyInspectorDidDisappearJSON,
+			&PropertyInspectorDidDisappear{
+				Action:  "com.elgato.example.action1",
+				Context: "context",
+				Device:  "device",
+			},
+		},
+		"sendToPlugin": {
+			sendToPluginJSON,
+			&SendToPlugin{
+				Action:  "com.elgato.example.action1",
+				Context: "context",
+				Payload: json.RawMessage("{}"),
+			},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			var ep eventPayload
@@ -150,6 +195,27 @@ func TestEventPayload_Typed(t *testing.T) {
 		})
 	}
 }
+
+var didReceiveSettingsJSON = `{
+    "action": "com.elgato.example.action1",
+    "event": "didReceiveSettings",
+    "context": "context",
+    "device": "device",
+    "payload": {
+        "settings": {},
+        "coordinates": {
+            "column": 3, 
+            "row": 1
+        },
+        "state": 1,
+        "isInMultiAction": true
+    }
+}`
+
+var didReceiveGlobalSettingsJSON = `{
+    "event": "didReceiveGlobalSettings",
+    "payload": {}
+}`
 
 var keyDownJSON = `{
     "action": "com.elgato.example.action1",
@@ -276,6 +342,27 @@ var applicationDidTerminateJSON = `{
 
 var systemDidWakeUpJSON = `{
     "event": "systemDidWakeUp"
+}`
+
+var propertyInspectorDidAppearJSON = `{
+  "action": "com.elgato.example.action1", 
+  "event": "propertyInspectorDidAppear", 
+  "context": "context", 
+  "device": "device"
+}`
+
+var propertyInspectorDidDisappearJSON = `{
+  "action": "com.elgato.example.action1", 
+  "event": "propertyInspectorDidDisappear", 
+  "context": "context", 
+  "device": "device"
+}`
+
+var sendToPluginJSON = `{
+  "action": "com.elgato.example.action1", 
+  "event": "sendToPlugin", 
+  "context": "context", 
+  "payload": {}
 }`
 
 func noError(tb testing.TB, err error) {
