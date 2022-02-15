@@ -10,7 +10,7 @@ import (
 // the interface is enumerated below the definition in the source code.
 type Command interface {
 	commandMark()
-	Event() string
+	event() string
 }
 
 var _ = []Command{
@@ -23,15 +23,16 @@ func (*commandMarkImpl) commandMark() {}
 
 type commandPayload struct {
 	Event   string          `json:"event"`
-	Action  string          `json:"action,omitempty"`
 	Context string          `json:"context,omitempty"`
+	Action  string          `json:"action,omitempty"`
 	Device  string          `json:"device,omitempty"`
 	Payload json.RawMessage `json:"payload,omitempty"`
 }
 
-func newCommandPayload(cmd Command) (*commandPayload, error) {
+func newCommandPayload(cmd Command, pluginUUID string) (*commandPayload, error) {
 	p := &commandPayload{
-		Event: cmd.Event(),
+		Event:   cmd.event(),
+		Context: pluginUUID,
 	}
 
 	payload, err := json.Marshal(cmd)
@@ -41,14 +42,14 @@ func newCommandPayload(cmd Command) (*commandPayload, error) {
 
 	p.Payload = payload
 
+	if t, ok := cmd.(interface{ getContext() string }); ok {
+		p.Context = t.getContext()
+	}
 	if t, ok := cmd.(interface{ getAction() string }); ok {
 		p.Action = t.getAction()
 	}
-	if t, ok := cmd.(interface{ getContext() string }); ok {
-		p.Action = t.getContext()
-	}
 	if t, ok := cmd.(interface{ getDevice() string }); ok {
-		p.Action = t.getDevice()
+		p.Device = t.getDevice()
 	}
 
 	return p, nil
@@ -60,6 +61,20 @@ type LogMessage struct {
 	Message string `json:"message"`
 }
 
-func (l *LogMessage) Event() string {
+func (*LogMessage) event() string {
 	return "logMessage"
+}
+
+type ShowOK struct {
+	commandMarkImpl
+
+	Context InstanceID `json:"context"`
+}
+
+func (*ShowOK) event() string {
+	return "showOk"
+}
+
+func (cmd *ShowOK) getContext() string {
+	return string(cmd.Context)
 }

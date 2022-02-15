@@ -116,9 +116,9 @@ func (ep eventPayload) Typed() (Event, error) {
 type DidReceiveSettings struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 
 	Settings        json.RawMessage `json:"settings"`
 	Coordinates     Coordinates     `json:"coordinates"`
@@ -135,9 +135,9 @@ type DidReceiveGlobalSettings struct {
 type KeyDown struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 
 	Settings         json.RawMessage `json:"settings"`
 	Coordinates      Coordinates     `json:"coordinates"`
@@ -149,9 +149,9 @@ type KeyDown struct {
 type KeyUp struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 
 	Settings         json.RawMessage `json:"settings"`
 	Coordinates      Coordinates     `json:"coordinates"`
@@ -163,9 +163,9 @@ type KeyUp struct {
 type WillAppear struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 
 	Settings        json.RawMessage `json:"settings"`
 	Coordinates     Coordinates     `json:"coordinates"`
@@ -176,9 +176,9 @@ type WillAppear struct {
 type WillDisappear struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 
 	Settings        json.RawMessage `json:"settings"`
 	Coordinates     Coordinates     `json:"coordinates"`
@@ -189,9 +189,9 @@ type WillDisappear struct {
 type TitleParametersDidChange struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 
 	Settings        json.RawMessage `json:"settings"`
 	Coordinates     Coordinates     `json:"coordinates"`
@@ -203,26 +203,26 @@ type TitleParametersDidChange struct {
 type DeviceDidConnect struct {
 	eventMarkImpl
 
-	Device     string      `json:"device"`
+	Device     DeviceID    `json:"device"`
 	DeviceInfo *DeviceInfo `json:"deviceInfo"`
 }
 
 type DeviceDidDisconnect struct {
 	eventMarkImpl
 
-	Device string `json:"device"`
+	Device DeviceID `json:"device"`
 }
 
 type ApplicationDidLaunch struct {
 	eventMarkImpl
 
-	Application string `json:"application"`
+	Application ApplicationID `json:"application"`
 }
 
 type ApplicationDidTerminate struct {
 	eventMarkImpl
 
-	Application string `json:"application"`
+	Application ApplicationID `json:"application"`
 }
 
 type SystemDidWakeUp struct {
@@ -232,24 +232,26 @@ type SystemDidWakeUp struct {
 type PropertyInspectorDidAppear struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 }
 
 type PropertyInspectorDidDisappear struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
-	Device  string `json:"device"`
+	Action  ActionID   `json:"action"`
+	Context InstanceID `json:"context"`
+	Device  DeviceID   `json:"device"`
 }
 
 type SendToPlugin struct {
 	eventMarkImpl
 
-	Action  string `json:"action"`
-	Context string `json:"context"`
+	Action ActionID `json:"action"`
+	// Context may be a PropertyInspectorID.
+	// TODO: check what ID is set.
+	Context InstanceID `json:"context"`
 
 	Payload json.RawMessage `json:"payload"`
 }
@@ -298,3 +300,11 @@ const (
 	AlignmentBottom Alignment = "bottom"
 	AlignmentMiddle Alignment = "middle"
 )
+
+type ActionID string
+
+type InstanceID string
+
+type DeviceID string
+
+type ApplicationID string
