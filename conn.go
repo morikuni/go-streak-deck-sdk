@@ -57,17 +57,10 @@ func Dial(port, event, uuid, info string) (*Conn, error) {
 		return nil, fmt.Errorf("error during registratino procedure: %w", err)
 	}
 
-	c := &Conn{
+	return &Conn{
 		conn,
 		uuid,
-	}
-
-	// Put dummy log because sometimes the first log seems to be discarded (I don't know why).
-	c.Send(&LogMessage{
-		Message: "dummy log",
-	})
-
-	return c, nil
+	}, nil
 }
 
 func (c *Conn) Receive() (Event, error) {
