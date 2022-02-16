@@ -57,11 +57,12 @@ func Dial(port, event, uuid, info string) (*Conn, error) {
 		return nil, fmt.Errorf("error during registratino procedure: %w", err)
 	}
 
-	// Put dummy log because the first log seems to be discarded (I don't know why).
 	c := &Conn{
 		conn,
 		uuid,
 	}
+
+	// Put dummy log because sometimes the first log seems to be discarded (I don't know why).
 	c.Send(&LogMessage{
 		Message: "dummy log",
 	})
@@ -98,16 +99,6 @@ func (c *Conn) Send(cmd Command) error {
 	return nil
 }
 
-func (c *Conn) ShowOK(context InstanceID) error {
-	return c.Send(&ShowOK{
-		Context: context,
-	})
-}
-
 func (c *Conn) Close() error {
 	return c.conn.Close()
-}
-
-func (c *Conn) Logger() *Logger {
-	return &Logger{c}
 }
