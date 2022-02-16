@@ -15,11 +15,18 @@ type Command interface {
 
 var _ = []Command{
 	(*LogMessage)(nil),
+	(*ShowOK)(nil),
 }
 
-type commandMarkImpl struct{}
+type noPayloadCommand struct{}
 
-func (*commandMarkImpl) commandMark() {}
+func (*noPayloadCommand) commandMark() {}
+
+type payloadCommand struct{}
+
+func (*payloadCommand) commandMark() {}
+
+func (*payloadCommand) hasPayload() {}
 
 type commandPayload struct {
 	Event   string          `json:"event"`
@@ -35,13 +42,13 @@ func newCommandPayload(cmd Command, pluginUUID string) (*commandPayload, error) 
 		Context: pluginUUID,
 	}
 
-	payload, err := json.Marshal(cmd)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal a command: %w: %v", err, cmd)
+	if _, ok := cmd.(interface{ hasPayload() }); ok {
+		payload, err := json.Marshal(cmd)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal a command: %w: %v", err, cmd)
+		}
+		p.Payload = payload
 	}
-
-	p.Payload = payload
-
 	if t, ok := cmd.(interface{ getContext() string }); ok {
 		p.Context = t.getContext()
 	}
@@ -56,7 +63,7 @@ func newCommandPayload(cmd Command, pluginUUID string) (*commandPayload, error) 
 }
 
 type LogMessage struct {
-	commandMarkImpl
+	payloadCommand
 
 	Message string `json:"message"`
 }
@@ -66,9 +73,9 @@ func (*LogMessage) event() string {
 }
 
 type ShowOK struct {
-	commandMarkImpl
+	noPayloadCommand
 
-	Context InstanceID `json:"context"`
+	Context InstanceID
 }
 
 func (*ShowOK) event() string {
