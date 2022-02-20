@@ -9,10 +9,12 @@ import (
 
 type SDK struct {
 	conn *Conn
+
+	debugLog bool
 }
 
 func NewSDK(conn *Conn) *SDK {
-	return &SDK{conn: conn}
+	return &SDK{conn: conn, debugLog: true}
 }
 
 func (sdk *SDK) ShowOK(context InstanceID) error {
@@ -27,7 +29,6 @@ func (sdk *SDK) ShowAlert(context InstanceID) error {
 	})
 }
 
-// Log prints log via Stream Deck API.
 func (sdk *SDK) Log(a ...interface{}) {
 	s := fmt.Sprintln(a...)
 	_ = sdk.conn.Send(&LogMessage{
@@ -42,6 +43,18 @@ func (sdk *SDK) Logf(format string, a ...interface{}) {
 	})
 }
 
+func (sdk *SDK) debug(a ...interface{}) {
+	if sdk.debugLog {
+		sdk.Log(a...)
+	}
+}
+
+func (sdk *SDK) debugf(format string, a ...interface{}) {
+	if sdk.debugLog {
+		sdk.Logf(format, a...)
+	}
+}
+
 func (sdk *SDK) WatchInstance(ctx context.Context, f InstanceFactory) error {
 	s := newSupervisor(ctx, sdk, f)
 
@@ -54,6 +67,8 @@ func (sdk *SDK) WatchInstance(ctx context.Context, f InstanceFactory) error {
 			sdk.Log("go-stream-deck-sdk: error on receive", err)
 			continue
 		}
+
+		sdk.debugf("[DEBUG] go-stream-deck-sdk: received: %#v", ev)
 
 		s.handle(ev)
 	}

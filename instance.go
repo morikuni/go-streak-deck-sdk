@@ -56,6 +56,8 @@ func (i *Instance) run(ctx context.Context) {
 		i.mu.Unlock()
 
 		for _, event := range events {
+			i.sdk.debugf("[DEBUG] go-stream-deck-sdk: instance(%s) received: %T", i.id, event)
+
 			var err error
 			switch event := event.(type) {
 			case *KeyDown:
@@ -63,9 +65,8 @@ func (i *Instance) run(ctx context.Context) {
 					err = i.OnKeyDown(i.ctx(ctx, i.sdk), event)
 				}
 			}
-
 			if err != nil {
-				i.sdk.Logf("go-stream-deck-sdk: error on instance(id=%v): %T: %v", i.id, event, err)
+				i.sdk.Logf("go-stream-deck-sdk: error on instance(%s): %T: %v", i.id, event, err)
 			}
 		}
 	}
@@ -142,6 +143,7 @@ func (s *supervisor) tell(id InstanceID, ev Event) {
 	defer s.mu.Unlock()
 	instance, ok := s.instanceByID[id]
 	if !ok {
+		s.sdk.debugf("[DEBUG] go-stream-deck-sdk: spawn instance(%s): %T", id, ev)
 		instance = s.spawn(id)
 		if instance == nil {
 			s.sdk.Logf("go-stream-deck-sdk: no instance returned: id = %s", id)
@@ -173,7 +175,7 @@ func (s *supervisor) spawn(id InstanceID) *Instance {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				s.sdk.Logf("go-stream-deck-sdk: panic on instance(id=%v): %v", instance.id, r)
+				s.sdk.Logf("go-stream-deck-sdk: panic on instance(%v): %v", instance.id, r)
 				s.sdk.Log(string(debug.Stack()))
 				_ = s.sdk.ShowAlert(instance.id)
 				s.mu.Lock()
@@ -182,7 +184,6 @@ func (s *supervisor) spawn(id InstanceID) *Instance {
 			}
 		}()
 
-		s.sdk.Log("spawn", id)
 		instance.run(s.ctx)
 	}()
 
