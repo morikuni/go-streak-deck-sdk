@@ -11,6 +11,9 @@ type Context interface {
 	context.Context
 
 	ShowOK() error
+	ShowAlert() error
+	Log(a ...interface{})
+	Logf(format string, a ...interface{})
 }
 
 type instanceCtx struct {
@@ -22,6 +25,18 @@ type instanceCtx struct {
 
 func (ctx *instanceCtx) ShowOK() error {
 	return ctx.sdk.ShowOK(ctx.instanceID)
+}
+
+func (ctx *instanceCtx) ShowAlert() error {
+	return ctx.sdk.ShowAlert(ctx.instanceID)
+}
+
+func (ctx *instanceCtx) Log(a ...interface{}) {
+	ctx.sdk.Log(a...)
+}
+
+func (ctx *instanceCtx) Logf(format string, a ...interface{}) {
+	ctx.sdk.Logf(format, a...)
 }
 
 type InstanceFactory func(ctx Context, id InstanceID) *Instance
@@ -36,6 +51,7 @@ type Instance struct {
 	mu      sync.Mutex
 
 	OnKeyDown func(Context, *KeyDown) error
+	OnKeyUp   func(Context, *KeyUp) error
 }
 
 func (i *Instance) ctx(ctx context.Context, sdk *SDK) Context {
@@ -63,6 +79,10 @@ func (i *Instance) run(ctx context.Context) {
 			case *KeyDown:
 				if i.OnKeyDown != nil {
 					err = i.OnKeyDown(i.ctx(ctx, i.sdk), event)
+				}
+			case *KeyUp:
+				if i.OnKeyUp != nil {
+					err = i.OnKeyUp(i.ctx(ctx, i.sdk), event)
 				}
 			}
 			if err != nil {
