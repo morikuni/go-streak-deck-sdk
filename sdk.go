@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"runtime/debug"
 )
 
 type SDK struct {
@@ -44,14 +43,6 @@ func (sdk *SDK) Logf(format string, a ...interface{}) {
 }
 
 func (sdk *SDK) WatchInstance(ctx context.Context, f InstanceFactory) error {
-	defer func() {
-		// TODO: remove recover
-		if r := recover(); r != nil {
-			sdk.Log(r)
-			sdk.Log(string(debug.Stack()))
-		}
-	}()
-
 	s := newSupervisor(ctx, sdk, f)
 
 	for {
