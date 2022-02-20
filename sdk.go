@@ -16,8 +16,14 @@ func NewSDK(conn *Conn) *SDK {
 	return &SDK{conn: conn}
 }
 
-func (sdk *SDK) ShowOK(context InstanceID) {
-	_ = sdk.conn.Send(&ShowOK{
+func (sdk *SDK) ShowOK(context InstanceID) error {
+	return sdk.conn.Send(&ShowOK{
+		Context: context,
+	})
+}
+
+func (sdk *SDK) ShowAlert(context InstanceID) error {
+	return sdk.conn.Send(&ShowAlert{
 		Context: context,
 	})
 }
@@ -39,31 +45,14 @@ func (sdk *SDK) Logf(format string, a ...interface{}) {
 
 func (sdk *SDK) WatchInstance(ctx context.Context, f InstanceFactory) error {
 	defer func() {
+		// TODO: remove recover
 		if r := recover(); r != nil {
 			sdk.Log(r)
 			sdk.Log(string(debug.Stack()))
 		}
 	}()
 
-	instanceByID := make(map[InstanceID]*Instance)
-	withInstance := func(id InstanceID, callback func(*Instance) error) {
-		instance, ok := instanceByID[id]
-		if !ok {
-			instance = f(&instanceCtx{ctx, sdk.conn, id}, id)
-			if instance == nil {
-				sdk.Log("go-stream-deck-sdk: no instance returned: id = %s", id)
-				return
-			}
-			instance.id = id
-			instanceByID[id] = instance
-		}
-
-		err := callback(instance)
-		if err != nil {
-			sdk.Logf("go-stream-deck-sdk: error on instance(id=%v): %v", instance.id, err)
-			return
-		}
-	}
+	s := newSupervisor(ctx, sdk, f)
 
 	for {
 		ev, err := sdk.conn.Receive()
@@ -75,11 +64,6 @@ func (sdk *SDK) WatchInstance(ctx context.Context, f InstanceFactory) error {
 			continue
 		}
 
-		switch t := ev.(type) {
-		case *KeyDown:
-			withInstance(t.Context, func(instance *Instance) error {
-				return instance.OnKeyDown(instance.ctx(ctx, sdk.conn), t)
-			})
-		}
+		s.handle(ev)
 	}
 }

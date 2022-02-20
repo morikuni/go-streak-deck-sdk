@@ -16,6 +16,7 @@ type Command interface {
 var _ = []Command{
 	(*LogMessage)(nil),
 	(*ShowOK)(nil),
+	(*ShowAlert)(nil),
 }
 
 type noPayloadCommand struct{}
@@ -83,5 +84,19 @@ func (*ShowOK) event() string {
 }
 
 func (cmd *ShowOK) getContext() string {
+	return string(cmd.Context)
+}
+
+type ShowAlert struct {
+	noPayloadCommand
+
+	Context InstanceID
+}
+
+func (*ShowAlert) event() string {
+	return "showAlert"
+}
+
+func (cmd *ShowAlert) getContext() string {
 	return string(cmd.Context)
 }

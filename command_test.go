@@ -33,6 +33,15 @@ func TestNewCommandPayload(t *testing.T) {
 			},
 		},
 		{
+			cmd: &ShowAlert{
+				Context: "instanceID",
+			},
+			want: &commandPayload{
+				Event:   "showAlert",
+				Context: "instanceID", // don't need to set this field, but set automatically.
+			},
+		},
+		{
 			cmd: &ShowOK{
 				Context: "instanceID",
 			},
