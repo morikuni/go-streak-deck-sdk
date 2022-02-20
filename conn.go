@@ -1,7 +1,6 @@
 package streamdeck
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -10,48 +9,77 @@ import (
 )
 
 type Conn struct {
-	conn *websocket.Conn
-	uuid string
+	conn       *websocket.Conn
+	pluginUUID string
 }
 
-func DialAuto() (*Conn, error) {
-	fs := flag.NewFlagSet("go-stream-deck-sdk", flag.ContinueOnError)
+type DialOption dialOption
 
-	port := fs.String("port", "", "port to bind websocket server")
-	uuid := fs.String("pluginUUID", "", "the ID of the plugin")
-	event := fs.String("registerEvent", "", "the event type to register websocket connection")
-	info := fs.String("info", "", "the context of the plugin")
-
-	err := fs.Parse(os.Args[1:])
-	if err != nil {
-		return nil, fmt.Errorf("invalid parameter: %w", err)
+func WithPort(port string) DialOption {
+	return func(config *dialConfig) {
+		config.port = port
 	}
-
-	return Dial(*port, *event, *uuid, *info)
 }
 
-func Dial(port, event, uuid, info string) (*Conn, error) {
-	if port == "" {
-		return nil, errors.New("port is emtpy")
+func WithPluginUUID(uuid string) DialOption {
+	return func(config *dialConfig) {
+		config.pluginUUID = uuid
 	}
-	if uuid == "" {
-		return nil, errors.New("uuid is emtpy")
+}
+
+func WithRegisterEvent(event string) DialOption {
+	return func(config *dialConfig) {
+		config.registerEvent = event
 	}
-	if event == "" {
-		return nil, errors.New("event is emtpy")
-	}
-	if info == "" {
-		return nil, errors.New("info is emtpy")
+}
+
+type dialOption func(*dialConfig)
+
+type dialConfig struct {
+	port          string
+	pluginUUID    string
+	registerEvent string
+}
+
+func Dial(opts ...DialOption) (*Conn, error) {
+	var cfg dialConfig
+	for _, o := range opts {
+		o(&cfg)
 	}
 
-	conn, err := websocket.Dial("ws://localhost:"+port, "", "http://localhost:"+port)
+	if cfg.port == "" || cfg.pluginUUID == "" || cfg.registerEvent == "" {
+		fs := flag.NewFlagSet("go-stream-deck-sdk", flag.ContinueOnError)
+
+		port := fs.String("port", "", "port to bind websocket server")
+		uuid := fs.String("pluginUUID", "", "the ID of the plugin")
+		event := fs.String("registerEvent", "", "the event type to register websocket connection")
+		// define info flag to avoid error.
+		_ = fs.String("info", "", "the event type to register websocket connection")
+
+		err := fs.Parse(os.Args[1:])
+		if err != nil {
+			return nil, fmt.Errorf("invalid parameter: %w", err)
+		}
+
+		if cfg.port == "" {
+			cfg.port = *port
+		}
+		if cfg.pluginUUID == "" {
+			cfg.pluginUUID = *uuid
+		}
+		if cfg.registerEvent == "" {
+			cfg.registerEvent = *event
+		}
+	}
+
+	conn, err := websocket.Dial("ws://localhost:"+cfg.port, "", "http://localhost:"+cfg.port)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to the server: %w", err)
 	}
 
 	err = websocket.JSON.Send(conn, map[string]string{
-		"event": event,
-		"uuid":  uuid,
+		"event": cfg.registerEvent,
+		"uuid":  cfg.pluginUUID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error during registratino procedure: %w", err)
@@ -59,7 +87,7 @@ func Dial(port, event, uuid, info string) (*Conn, error) {
 
 	return &Conn{
 		conn,
-		uuid,
+		cfg.pluginUUID,
 	}, nil
 }
 
@@ -79,7 +107,7 @@ func (c *Conn) Receive() (Event, error) {
 }
 
 func (c *Conn) Send(cmd Command) error {
-	payload, err := newCommandPayload(cmd, c.uuid)
+	payload, err := newCommandPayload(cmd, c.pluginUUID)
 	if err != nil {
 		return err
 	}
