@@ -17,6 +17,12 @@ func NewSDK(conn *Conn) *SDK {
 	return &SDK{conn: conn, debugLog: true}
 }
 
+func (sdk *SDK) OpenURL(url string) error {
+	return sdk.conn.Send(&OpenURL{
+		URL: url,
+	})
+}
+
 func (sdk *SDK) ShowOK(context InstanceID) error {
 	return sdk.conn.Send(&ShowOK{
 		Context: context,

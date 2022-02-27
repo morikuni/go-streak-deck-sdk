@@ -10,6 +10,7 @@ import (
 type Context interface {
 	context.Context
 
+	OpenURL(url string) error
 	ShowOK() error
 	ShowAlert() error
 	Log(a ...interface{})
@@ -21,6 +22,10 @@ type instanceCtx struct {
 
 	sdk        *SDK
 	instanceID InstanceID
+}
+
+func (ctx *instanceCtx) OpenURL(url string) error {
+	return ctx.sdk.OpenURL(url)
 }
 
 func (ctx *instanceCtx) ShowOK() error {

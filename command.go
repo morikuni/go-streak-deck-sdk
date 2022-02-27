@@ -14,6 +14,7 @@ type Command interface {
 }
 
 var _ = []Command{
+	(*OpenURL)(nil),
 	(*LogMessage)(nil),
 	(*ShowOK)(nil),
 	(*ShowAlert)(nil),
@@ -61,6 +62,16 @@ func newCommandPayload(cmd Command, pluginUUID string) (*commandPayload, error) 
 	}
 
 	return p, nil
+}
+
+type OpenURL struct {
+	payloadCommand
+
+	URL string `json:"url"`
+}
+
+func (*OpenURL) event() string {
+	return "openUrl"
 }
 
 type LogMessage struct {

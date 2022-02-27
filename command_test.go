@@ -21,6 +21,18 @@ func TestNewCommandPayload(t *testing.T) {
 		want *commandPayload
 	}{
 		{
+			cmd: &OpenURL{
+				URL: "url",
+			},
+			want: &commandPayload{
+				Event:   "openUrl",
+				Context: "pluginUUID", // don't need to set this field, but set automatically.
+				Payload: toJSON(map[string]string{
+					"url": "url",
+				}),
+			},
+		},
+		{
 			cmd: &LogMessage{
 				Message: "message",
 			},
@@ -38,7 +50,7 @@ func TestNewCommandPayload(t *testing.T) {
 			},
 			want: &commandPayload{
 				Event:   "showAlert",
-				Context: "instanceID", // don't need to set this field, but set automatically.
+				Context: "instanceID",
 			},
 		},
 		{
@@ -47,7 +59,7 @@ func TestNewCommandPayload(t *testing.T) {
 			},
 			want: &commandPayload{
 				Event:   "showOk",
-				Context: "instanceID", // don't need to set this field, but set automatically.
+				Context: "instanceID",
 			},
 		},
 	} {
