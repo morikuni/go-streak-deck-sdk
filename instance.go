@@ -7,14 +7,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-type Context interface {
-	context.Context
+type InstanceContext interface {
+	Context
 
-	OpenURL(url string) error
 	ShowOK() error
 	ShowAlert() error
-	Log(a ...interface{})
-	Logf(format string, a ...interface{})
 }
 
 type instanceCtx struct {
@@ -44,7 +41,7 @@ func (ctx *instanceCtx) Logf(format string, a ...interface{}) {
 	ctx.sdk.Logf(format, a...)
 }
 
-type InstanceFactory func(ctx Context, id InstanceID) *Instance
+type InstanceFactory func(ctx InstanceContext, id InstanceID) *Instance
 
 type Instance struct {
 	id  InstanceID
@@ -55,11 +52,11 @@ type Instance struct {
 	notify  chan struct{}
 	mu      sync.Mutex
 
-	OnKeyDown func(Context, *KeyDown) error
-	OnKeyUp   func(Context, *KeyUp) error
+	OnKeyDown func(InstanceContext, *KeyDown) error
+	OnKeyUp   func(InstanceContext, *KeyUp) error
 }
 
-func (i *Instance) ctx(ctx context.Context, sdk *SDK) Context {
+func (i *Instance) ctx(ctx context.Context, sdk *SDK) InstanceContext {
 	return &instanceCtx{ctx, sdk, i.id}
 }
 

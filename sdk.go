@@ -79,3 +79,21 @@ func (sdk *SDK) WatchInstance(ctx context.Context, f InstanceFactory) error {
 		s.handle(ev)
 	}
 }
+
+type Context interface {
+	context.Context
+
+	OpenURL(url string) error
+	Log(a ...interface{})
+	Logf(format string, a ...interface{})
+}
+
+type Handler interface {
+	Handle(ctx Context, ev Event)
+}
+
+type HandlerFunc func(ctx Context, ev Event)
+
+func (f HandlerFunc) Handle(ctx Context, ev Event) {
+	f(ctx, ev)
+}
