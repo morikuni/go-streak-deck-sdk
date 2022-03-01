@@ -381,6 +381,25 @@ func equal(tb testing.TB, got, want interface{}, opts ...cmp.Option) {
 	}
 }
 
+func equalJSON(tb testing.TB, got, want []byte, opts ...cmp.Option) {
+	tb.Helper()
+
+	if len(got) == 0 || len(want) == 0 {
+		equal(tb, got, want, opts...)
+		return
+	}
+
+	var gotV, wantV interface{}
+	err := json.Unmarshal(got, &gotV)
+	noError(tb, err)
+	err = json.Unmarshal(want, &wantV)
+	noError(tb, err)
+
+	if diff := cmp.Diff(gotV, wantV, opts...); diff != "" {
+		tb.Fatalf("(+want, -got): %s", diff)
+	}
+}
+
 func ignoreUnexported(v interface{}) cmp.Option {
 	return cmpopts.IgnoreUnexported(reflect.Indirect(reflect.ValueOf(v)).Interface())
 }

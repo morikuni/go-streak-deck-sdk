@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestNewCommandPayload(t *testing.T) {
@@ -45,6 +47,23 @@ func TestNewCommandPayload(t *testing.T) {
 			},
 		},
 		{
+			cmd: &SetTitle{
+				Context: "instanceID",
+				Title:   "title",
+				Target:  TitleTargetHardware,
+				State:   2,
+			},
+			want: &commandPayload{
+				Event:   "setTitle",
+				Context: "instanceID",
+				Payload: toJSON(map[string]interface{}{
+					"title":  "title",
+					"target": 1,
+					"state":  2,
+				}),
+			},
+		},
+		{
 			cmd: &ShowAlert{
 				Context: "instanceID",
 			},
@@ -66,7 +85,8 @@ func TestNewCommandPayload(t *testing.T) {
 		t.Run(fmt.Sprintf("%T", tt.cmd), func(t *testing.T) {
 			cp, err := newCommandPayload(tt.cmd, "pluginUUID")
 			noError(t, err)
-			equal(t, cp, tt.want)
+			equal(t, cp, tt.want, cmpopts.IgnoreFields(commandPayload{}, "Payload"))
+			equalJSON(t, cp.Payload, tt.want.Payload)
 		})
 	}
 }

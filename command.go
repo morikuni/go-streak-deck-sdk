@@ -16,8 +16,9 @@ type Command interface {
 var _ = []Command{
 	(*OpenURL)(nil),
 	(*LogMessage)(nil),
-	(*ShowOK)(nil),
+	(*SetTitle)(nil),
 	(*ShowAlert)(nil),
+	(*ShowOK)(nil),
 }
 
 type noPayloadCommand struct{}
@@ -84,10 +85,42 @@ func (*LogMessage) event() string {
 	return "logMessage"
 }
 
+type SetTitle struct {
+	payloadCommand
+
+	Context InstanceID `json:"-"`
+
+	Title  string      `json:"title"`
+	Target TitleTarget `json:"target"`
+	State  int         `json:"state"`
+}
+
+func (*SetTitle) event() string {
+	return "setTitle"
+}
+
+func (cmd *SetTitle) getContext() string {
+	return string(cmd.Context)
+}
+
+type ShowAlert struct {
+	noPayloadCommand
+
+	Context InstanceID `json:"-"`
+}
+
+func (*ShowAlert) event() string {
+	return "showAlert"
+}
+
+func (cmd *ShowAlert) getContext() string {
+	return string(cmd.Context)
+}
+
 type ShowOK struct {
 	noPayloadCommand
 
-	Context InstanceID
+	Context InstanceID `json:"-"`
 }
 
 func (*ShowOK) event() string {
@@ -98,16 +131,10 @@ func (cmd *ShowOK) getContext() string {
 	return string(cmd.Context)
 }
 
-type ShowAlert struct {
-	noPayloadCommand
+type TitleTarget int
 
-	Context InstanceID
-}
-
-func (*ShowAlert) event() string {
-	return "showAlert"
-}
-
-func (cmd *ShowAlert) getContext() string {
-	return string(cmd.Context)
-}
+const (
+	TitleTargetBoth     TitleTarget = 0
+	TitleTargetHardware TitleTarget = 1
+	TitleTargetSoftware TitleTarget = 2
+)

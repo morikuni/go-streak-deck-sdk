@@ -10,8 +10,9 @@ import (
 type InstanceContext interface {
 	Context
 
-	ShowOK() error
+	SetTitle(title string, target TitleTarget, state int) error
 	ShowAlert() error
+	ShowOK() error
 }
 
 type instanceCtx struct {
@@ -25,12 +26,16 @@ func (ctx *instanceCtx) OpenURL(url string) error {
 	return ctx.sdk.OpenURL(url)
 }
 
-func (ctx *instanceCtx) ShowOK() error {
-	return ctx.sdk.ShowOK(ctx.instanceID)
+func (ctx *instanceCtx) SetTitle(title string, target TitleTarget, state int) error {
+	return ctx.sdk.SetTitle(ctx.instanceID, title, target, state)
 }
 
 func (ctx *instanceCtx) ShowAlert() error {
 	return ctx.sdk.ShowAlert(ctx.instanceID)
+}
+
+func (ctx *instanceCtx) ShowOK() error {
+	return ctx.sdk.ShowOK(ctx.instanceID)
 }
 
 func (ctx *instanceCtx) Log(a ...interface{}) {

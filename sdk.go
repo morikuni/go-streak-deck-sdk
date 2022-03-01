@@ -23,14 +23,23 @@ func (sdk *SDK) OpenURL(url string) error {
 	})
 }
 
-func (sdk *SDK) ShowOK(context InstanceID) error {
-	return sdk.conn.Send(&ShowOK{
+func (sdk *SDK) SetTitle(context InstanceID, title string, target TitleTarget, state int) error {
+	return sdk.conn.Send(&SetTitle{
 		Context: context,
+		Title:   title,
+		Target:  target,
+		State:   state,
 	})
 }
 
 func (sdk *SDK) ShowAlert(context InstanceID) error {
 	return sdk.conn.Send(&ShowAlert{
+		Context: context,
+	})
+}
+
+func (sdk *SDK) ShowOK(context InstanceID) error {
+	return sdk.conn.Send(&ShowOK{
 		Context: context,
 	})
 }
