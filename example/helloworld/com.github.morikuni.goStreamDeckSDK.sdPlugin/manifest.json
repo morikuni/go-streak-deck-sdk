@@ -1,0 +1,30 @@
+{
+	"Actions": [
+		{
+			"Icon": "icon",
+			"Name": "Hello World",
+			"States": [
+				{
+					"Image": "icon"
+				}
+			],
+			"UUID": "com.github.morikuni.helloworld"
+		}
+	],
+	"Author": "morikuni",
+	"CodePath": "helloworld",
+	"Description": "hello world app",
+	"Icon": "icon",
+	"Name": "Hello World",
+	"Version": "0.0.0",
+	"SDKVersion": 2,
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "10"
+		}
+	],
+	"Software": {
+		"MinimumVersion": "5.0"
+	}
+}
