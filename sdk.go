@@ -89,6 +89,28 @@ func (sdk *SDK) WatchInstance(ctx context.Context, f InstanceFactory) error {
 	}
 }
 
+func (sdk *SDK) Receive(ctx context.Context, h Handler) error {
+	hc := &handlerCtx{
+		ctx,
+		sdk,
+	}
+
+	for {
+		ev, err := sdk.conn.Receive()
+		if errors.Is(err, io.EOF) {
+			return fmt.Errorf("stop due to EOF: %w", err)
+		}
+		if err != nil {
+			sdk.Log("go-stream-deck-sdk: error on receive", err)
+			continue
+		}
+
+		sdk.debugf("[DEBUG] go-stream-deck-sdk: received: %#v", ev)
+
+		return h.Handle(hc, ev)
+	}
+}
+
 type Context interface {
 	context.Context
 
@@ -97,12 +119,32 @@ type Context interface {
 	Logf(format string, a ...interface{})
 }
 
-type Handler interface {
-	Handle(ctx Context, ev Event)
+type handlerCtx struct {
+	context.Context
+
+	sdk *SDK
 }
 
-type HandlerFunc func(ctx Context, ev Event)
+var _ Context = (*handlerCtx)(nil)
 
-func (f HandlerFunc) Handle(ctx Context, ev Event) {
-	f(ctx, ev)
+func (ctx *handlerCtx) OpenURL(url string) error {
+	return ctx.sdk.OpenURL(url)
+}
+
+func (ctx *handlerCtx) Log(a ...interface{}) {
+	ctx.sdk.Log(a...)
+}
+
+func (ctx *handlerCtx) Logf(format string, a ...interface{}) {
+	ctx.sdk.Logf(format, a...)
+}
+
+type Handler interface {
+	Handle(ctx Context, ev Event) error
+}
+
+type HandlerFunc func(ctx Context, ev Event) error
+
+func (f HandlerFunc) Handle(ctx Context, ev Event) error {
+	return f(ctx, ev)
 }
