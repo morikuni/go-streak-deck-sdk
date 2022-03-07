@@ -18,8 +18,11 @@ func main() {
 
 	sdk := streamdeck.NewSDK(conn)
 	sdk.Log("start")
+	defer func() {
+		sdk.Log("exit", recover())
+	}()
 
-	err = sdk.WatchInstance(context.Background(), func(ctx streamdeck.InstanceContext, id streamdeck.InstanceID) *streamdeck.Instance {
+	factory := func(ctx streamdeck.InstanceContext, id streamdeck.InstanceID) *streamdeck.Instance {
 		return &streamdeck.Instance{
 			OnKeyDown: func(ctx streamdeck.InstanceContext, ev *streamdeck.KeyDown) error {
 				ctx.Log("key down")
@@ -30,7 +33,10 @@ func main() {
 				return ctx.SetTitle("", streamdeck.TitleTargetBoth, 0)
 			},
 		}
-	})
+	}
+	mux := streamdeck.NewMux(factory)
+
+	err = sdk.Receive(context.Background(), mux)
 	if err != nil {
 		sdk.Log(err)
 	}

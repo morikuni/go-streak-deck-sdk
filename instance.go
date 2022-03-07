@@ -3,8 +3,6 @@ package streamdeck
 import (
 	"runtime/debug"
 	"sync"
-
-	"golang.org/x/net/context"
 )
 
 type InstanceContext interface {
@@ -16,41 +14,30 @@ type InstanceContext interface {
 }
 
 type instanceCtx struct {
-	context.Context
-
-	sdk        *SDK
+	Context
 	instanceID InstanceID
 }
 
 func (ctx *instanceCtx) OpenURL(url string) error {
-	return ctx.sdk.OpenURL(url)
+	return ctx.SDK().OpenURL(url)
 }
 
 func (ctx *instanceCtx) SetTitle(title string, target TitleTarget, state int) error {
-	return ctx.sdk.SetTitle(ctx.instanceID, title, target, state)
+	return ctx.SDK().SetTitle(ctx.instanceID, title, target, state)
 }
 
 func (ctx *instanceCtx) ShowAlert() error {
-	return ctx.sdk.ShowAlert(ctx.instanceID)
+	return ctx.SDK().ShowAlert(ctx.instanceID)
 }
 
 func (ctx *instanceCtx) ShowOK() error {
-	return ctx.sdk.ShowOK(ctx.instanceID)
-}
-
-func (ctx *instanceCtx) Log(a ...interface{}) {
-	ctx.sdk.Log(a...)
-}
-
-func (ctx *instanceCtx) Logf(format string, a ...interface{}) {
-	ctx.sdk.Logf(format, a...)
+	return ctx.SDK().ShowOK(ctx.instanceID)
 }
 
 type InstanceFactory func(ctx InstanceContext, id InstanceID) *Instance
 
 type Instance struct {
-	id  InstanceID
-	sdk *SDK
+	id InstanceID
 
 	// Use slice + chan instead chan Event to have unlimited size of mailbox.
 	mailbox []Event
@@ -61,11 +48,12 @@ type Instance struct {
 	OnKeyUp   func(InstanceContext, *KeyUp) error
 }
 
-func (i *Instance) ctx(ctx context.Context, sdk *SDK) InstanceContext {
-	return &instanceCtx{ctx, sdk, i.id}
+func (i *Instance) ctx(ctx Context) InstanceContext {
+	return &instanceCtx{ctx, i.id}
 }
 
-func (i *Instance) run(ctx context.Context) {
+func (i *Instance) run(ctx Context) {
+	ictx := i.ctx(ctx)
 	for {
 		select {
 		case <-ctx.Done():
@@ -79,21 +67,21 @@ func (i *Instance) run(ctx context.Context) {
 		i.mu.Unlock()
 
 		for _, event := range events {
-			i.sdk.debugf("[DEBUG] go-stream-deck-sdk: instance(%s) received: %T", i.id, event)
+			ictx.SDK().debugf("[DEBUG] go-stream-deck-sdk: instance(%s) received: %T", i.id, event)
 
 			var err error
 			switch event := event.(type) {
 			case *KeyDown:
 				if i.OnKeyDown != nil {
-					err = i.OnKeyDown(i.ctx(ctx, i.sdk), event)
+					err = i.OnKeyDown(ictx, event)
 				}
 			case *KeyUp:
 				if i.OnKeyUp != nil {
-					err = i.OnKeyUp(i.ctx(ctx, i.sdk), event)
+					err = i.OnKeyUp(ictx, event)
 				}
 			}
 			if err != nil {
-				i.sdk.Logf("go-stream-deck-sdk: error on instance(%s): %T: %v", i.id, event, err)
+				ictx.Logf("go-stream-deck-sdk: error on instance(%s): %T: %v", i.id, event, err)
 			}
 		}
 	}
@@ -110,40 +98,36 @@ func (i *Instance) handle(ev Event) {
 	}
 }
 
-type supervisor struct {
-	ctx          context.Context
+type Mux struct {
 	mu           sync.Mutex
 	instanceByID map[InstanceID]*Instance
-	sdk          *SDK
 	factory      InstanceFactory
 }
 
-func newSupervisor(ctx context.Context, sdk *SDK, f InstanceFactory) *supervisor {
-	return &supervisor{
-		ctx,
+func NewMux(f InstanceFactory) *Mux {
+	return &Mux{
 		sync.Mutex{},
 		make(map[InstanceID]*Instance),
-		sdk,
 		f,
 	}
 }
 
-func (s *supervisor) handle(ev Event) {
+func (s *Mux) Handle(ctx Context, ev Event) error {
 	switch ev := ev.(type) {
 	case *DidReceiveSettings:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *DidReceiveGlobalSettings:
 		s.tellAll(ev)
 	case *KeyDown:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *KeyUp:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *WillAppear:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *WillDisappear:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *TitleParametersDidChange:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *DeviceDidConnect:
 		s.tellAll(ev)
 	case *DeviceDidDisconnect:
@@ -155,25 +139,26 @@ func (s *supervisor) handle(ev Event) {
 	case *SystemDidWakeUp:
 		s.tellAll(ev)
 	case *PropertyInspectorDidAppear:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *PropertyInspectorDidDisappear:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	case *SendToPlugin:
-		s.tell(ev.Context, ev)
+		s.tell(ctx, ev.Context, ev)
 	default:
-		s.sdk.Logf("go-stream-deck-sdk: unknown event: %T", ev)
+		ctx.Logf("go-stream-deck-sdk: unknown event: %T", ev)
 	}
+	return nil
 }
 
-func (s *supervisor) tell(id InstanceID, ev Event) {
+func (s *Mux) tell(ctx Context, id InstanceID, ev Event) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	instance, ok := s.instanceByID[id]
 	if !ok {
-		s.sdk.debugf("[DEBUG] go-stream-deck-sdk: spawn instance(%s): %T", id, ev)
-		instance = s.spawn(id)
+		ctx.SDK().debugf("[DEBUG] go-stream-deck-sdk: spawn instance(%s): %T", id, ev)
+		instance = s.spawn(ctx, id)
 		if instance == nil {
-			s.sdk.Logf("go-stream-deck-sdk: no instance returned: id = %s", id)
+			ctx.Logf("go-stream-deck-sdk: no instance returned: id = %s", id)
 			return
 		}
 		s.instanceByID[id] = instance
@@ -182,7 +167,7 @@ func (s *supervisor) tell(id InstanceID, ev Event) {
 	instance.handle(ev)
 }
 
-func (s *supervisor) tellAll(ev Event) {
+func (s *Mux) tellAll(ev Event) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -191,27 +176,26 @@ func (s *supervisor) tellAll(ev Event) {
 	}
 }
 
-func (s *supervisor) spawn(id InstanceID) *Instance {
-	instance := s.factory(&instanceCtx{s.ctx, s.sdk, id}, id)
+func (s *Mux) spawn(ctx Context, id InstanceID) *Instance {
+	instance := s.factory(&instanceCtx{ctx, id}, id)
 	if instance == nil {
 		return nil
 	}
 	instance.id = id
 	instance.notify = make(chan struct{}, 1)
-	instance.sdk = s.sdk
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				s.sdk.Logf("go-stream-deck-sdk: panic on instance(%v): %v", instance.id, r)
-				s.sdk.Log(string(debug.Stack()))
-				_ = s.sdk.ShowAlert(instance.id)
+				ctx.Logf("go-stream-deck-sdk: panic on instance(%v): %v", instance.id, r)
+				ctx.Log(string(debug.Stack()))
+				_ = ctx.SDK().ShowAlert(instance.id)
 				s.mu.Lock()
 				delete(s.instanceByID, instance.id)
 				s.mu.Unlock()
 			}
 		}()
 
-		instance.run(s.ctx)
+		instance.run(ctx)
 	}()
 
 	return instance
