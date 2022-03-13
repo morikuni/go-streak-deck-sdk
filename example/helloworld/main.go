@@ -26,11 +26,11 @@ func main() {
 		return &streamdeck.Instance{
 			OnKeyDown: func(ctx streamdeck.InstanceContext, ev *streamdeck.KeyDown) error {
 				ctx.Log("key down")
-				return ctx.SetTitle(time.Now().Format("15:04:05"), streamdeck.TitleTargetBoth, 0)
+				return ctx.SetTitle(time.Now().Format("15:04:05"), streamdeck.TargetBoth, 0)
 			},
 			OnKeyUp: func(ctx streamdeck.InstanceContext, ev *streamdeck.KeyUp) error {
 				ctx.Log("key up")
-				return ctx.SetTitle("", streamdeck.TitleTargetBoth, 0)
+				return ctx.SetTitle("", streamdeck.TargetBoth, 0)
 			},
 		}
 	}

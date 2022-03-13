@@ -50,7 +50,7 @@ func TestNewCommandPayload(t *testing.T) {
 			cmd: &SetTitle{
 				Context: "instanceID",
 				Title:   "title",
-				Target:  TitleTargetHardware,
+				Target:  TargetHardware,
 				State:   2,
 			},
 			want: &commandPayload{
@@ -60,6 +60,23 @@ func TestNewCommandPayload(t *testing.T) {
 					"title":  "title",
 					"target": 1,
 					"state":  2,
+				}),
+			},
+		},
+		{
+			cmd: &SetImage{
+				Context: "instanceID",
+				Image:   NewImage("png", []byte("data")),
+				Target:  TargetSoftware,
+				State:   3,
+			},
+			want: &commandPayload{
+				Event:   "setImage",
+				Context: "instanceID",
+				Payload: toJSON(map[string]interface{}{
+					"image":  "data:image/png;base64,ZGF0YQ==",
+					"target": 2,
+					"state":  3,
 				}),
 			},
 		},

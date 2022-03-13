@@ -8,7 +8,8 @@ import (
 type InstanceContext interface {
 	Context
 
-	SetTitle(title string, target TitleTarget, state int) error
+	SetTitle(title string, target Target, state int) error
+	SetImage(img Image, target Target, state int) error
 	ShowAlert() error
 	ShowOK() error
 }
@@ -22,8 +23,12 @@ func (ctx *instanceCtx) OpenURL(url string) error {
 	return ctx.SDK().OpenURL(url)
 }
 
-func (ctx *instanceCtx) SetTitle(title string, target TitleTarget, state int) error {
+func (ctx *instanceCtx) SetTitle(title string, target Target, state int) error {
 	return ctx.SDK().SetTitle(ctx.instanceID, title, target, state)
+}
+
+func (ctx *instanceCtx) SetImage(img Image, target Target, state int) error {
+	return ctx.SDK().SetImage(ctx.instanceID, img, target, state)
 }
 
 func (ctx *instanceCtx) ShowAlert() error {

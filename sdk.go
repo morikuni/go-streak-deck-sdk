@@ -23,10 +23,19 @@ func (sdk *SDK) OpenURL(url string) error {
 	})
 }
 
-func (sdk *SDK) SetTitle(context InstanceID, title string, target TitleTarget, state int) error {
+func (sdk *SDK) SetTitle(context InstanceID, title string, target Target, state int) error {
 	return sdk.conn.Send(&SetTitle{
 		Context: context,
 		Title:   title,
+		Target:  target,
+		State:   state,
+	})
+}
+
+func (sdk *SDK) SetImage(context InstanceID, img Image, target Target, state int) error {
+	return sdk.conn.Send(&SetImage{
+		Context: context,
+		Image:   img,
 		Target:  target,
 		State:   state,
 	})

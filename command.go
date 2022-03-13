@@ -1,6 +1,7 @@
 package streamdeck
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 )
@@ -17,6 +18,7 @@ var _ = []Command{
 	(*OpenURL)(nil),
 	(*LogMessage)(nil),
 	(*SetTitle)(nil),
+	(*SetImage)(nil),
 	(*ShowAlert)(nil),
 	(*ShowOK)(nil),
 }
@@ -90,9 +92,9 @@ type SetTitle struct {
 
 	Context InstanceID `json:"-"`
 
-	Title  string      `json:"title"`
-	Target TitleTarget `json:"target"`
-	State  int         `json:"state"`
+	Title  string `json:"title,omitempty"`
+	Target Target `json:"target"`
+	State  int    `json:"state"`
 }
 
 func (*SetTitle) event() string {
@@ -100,6 +102,24 @@ func (*SetTitle) event() string {
 }
 
 func (cmd *SetTitle) getContext() string {
+	return string(cmd.Context)
+}
+
+type SetImage struct {
+	payloadCommand
+
+	Context InstanceID `json:"-"`
+
+	Image  Image  `json:"image,omitempty"`
+	Target Target `json:"target"`
+	State  int    `json:"state"`
+}
+
+func (*SetImage) event() string {
+	return "setImage"
+}
+
+func (cmd *SetImage) getContext() string {
 	return string(cmd.Context)
 }
 
@@ -131,10 +151,17 @@ func (cmd *ShowOK) getContext() string {
 	return string(cmd.Context)
 }
 
-type TitleTarget int
+type Target int
 
 const (
-	TitleTargetBoth     TitleTarget = 0
-	TitleTargetHardware TitleTarget = 1
-	TitleTargetSoftware TitleTarget = 2
+	TargetBoth     Target = 0
+	TargetHardware Target = 1
+	TargetSoftware Target = 2
 )
+
+// Image represents Data URI scheme for image data.
+type Image string
+
+func NewImage(filetype string, data []byte) Image {
+	return Image(fmt.Sprintf("data:image/%s;base64,%s", filetype, base64.StdEncoding.EncodeToString(data)))
+}
