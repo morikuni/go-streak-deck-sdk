@@ -1,2 +1,2 @@
-# go-streak-deck-sdk
+# go-stream-deck-sdk
 Stream Deck Plugin SDK for Go.
