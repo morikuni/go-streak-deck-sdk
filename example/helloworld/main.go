@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"time"
-
-	"golang.org/x/net/context"
 
 	streamdeck "github.com/morikuni/go-stream-deck-sdk"
 )
@@ -22,21 +22,19 @@ func main() {
 		sdk.Log("exit", recover())
 	}()
 
-	factory := func(ctx streamdeck.InstanceContext, id streamdeck.InstanceID) *streamdeck.Instance {
-		return &streamdeck.Instance{
-			OnKeyDown: func(ctx streamdeck.InstanceContext, ev *streamdeck.KeyDown) error {
-				ctx.Log("key down")
-				return ctx.SetTitle(time.Now().Format("15:04:05"), streamdeck.TargetBoth, 0)
-			},
-			OnKeyUp: func(ctx streamdeck.InstanceContext, ev *streamdeck.KeyUp) error {
-				ctx.Log("key up")
-				return ctx.SetTitle("", streamdeck.TargetBoth, 0)
-			},
+	err = sdk.Receive(context.Background(), streamdeck.HandlerFunc(func(ctx context.Context, ev streamdeck.Event) error {
+		switch ev := ev.(type) {
+		case *streamdeck.KeyDown:
+			sdk.Log("key down")
+			return sdk.SetTitle(ev.Context, time.Now().Format("15:04:05"), streamdeck.TargetBoth, 0)
+		case *streamdeck.KeyUp:
+			sdk.Log("key up")
+			return sdk.SetTitle(ev.Context, "", streamdeck.TargetBoth, 0)
+		default:
+			fmt.Println(ev)
+			return nil
 		}
-	}
-	mux := streamdeck.NewMux(factory)
-
-	err = sdk.Receive(context.Background(), mux)
+	}))
 	if err != nil {
 		sdk.Log(err)
 	}
